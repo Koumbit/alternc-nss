@@ -10,6 +10,7 @@ This alternc plugin provide NSS support about alternc account. Purpose is to pro
 You need :
 * debian server (from wheezy to Stretch)
 * alternc >= 3.2
+* libnss-extrausers
 * [apt-transport-https](https://packages.debian.org/search?keywords=apt-transport-https) package to use https bintray service.
 
 
