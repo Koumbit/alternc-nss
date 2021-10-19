@@ -21,6 +21,24 @@ class m_nss
         $this->update_files();
     }
 
+    protected function local_user_exists($login)
+    {
+        global $msg;
+        // Check username in /etc/passwd
+        if($sys_passwd_file = file_get_contents("/etc/passwd")) {
+            preg_match_all("/$login/", $sys_passwd_file, $out);
+            $res_array = $out[0];
+            if(!empty($res_array)) {
+                $msg->raise("ERROR", "nss", "A user $login exists on the system");
+                return true;
+            }
+        } else {
+            $msg->log("nss", "hook_admin_add_member - ERROR: couldn't open /etc/passwd");
+            return true;
+        }
+        return false;
+    }
+
     public function define_files()
     {
         $this->define_group_file();
@@ -125,10 +143,16 @@ class m_nss
         return file_put_contents($file, $content, LOCK_EX);
     }
 
-    protected function hook_alternc_add_member()
+    public function hook_before_alternc_add_member($login)
     {
+        global $msg;
+        if($this->local_user_exists($login)) {
+            $msg->log("nss", "hook_alternc_add_nember - ERROR: Aborting user creation");
+            return false;
+        }
         $this->update_files();
         return true;
     }
+
 }
 
