@@ -26,7 +26,7 @@ class m_nss
         global $msg;
         // Check username in /etc/passwd
         if($sys_passwd_file = file_get_contents("/etc/passwd")) {
-            preg_match_all("/$login/", $sys_passwd_file, $out);
+            preg_match_all("/^$login:/m", $sys_passwd_file, $out);
             $res_array = $out[0];
             if(!empty($res_array)) {
                 $msg->raise("ERROR", "nss", "A user $login exists on the system");
