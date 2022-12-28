@@ -42,7 +42,7 @@ class m_nss
 
     public function define_files()
     {
-        $this->prefix = variable_get('file_owner_prefix');
+        $this->prefix = variable_get('user_prefix');
         $this->define_group_file();
         $this->define_passwd_file();
         $this->define_shadow_file();
