@@ -8,7 +8,11 @@ class m_nss
     protected $group_file;
     protected $passwd_file;
     protected $shadow_file;
+
+    /** The name of the field in the table "variable"  */
+    protected $field_name = "user_prefix";
     protected $prefix;
+
     /** Hook function called when a user is created
      * This function add acccount to nss file
      * globals $cuid is the appropriate user
@@ -20,6 +24,53 @@ class m_nss
         global $msg;
         $msg->log("nss", "hook_admin_add_member");
         $this->update_files();
+    }
+
+    /** Hook function called after a value in the variable
+     * table is modified through the admin control panel.
+     *
+     * @param $name the field changed in the variable table
+     * @param $old the previous value overwritten in the table
+     * @param $new the new value now in the table
+     *
+     * @return void
+     */
+    public function hook_variable_set($name, $old, $new)
+    {
+        global $msg;
+        $msg->log("nss", "hook_variable_set($name,$old,$new)");
+
+        if ($name === $this->field_name)
+        {
+            // The prefix was changed
+            // Does the new prefix uses correct characters?
+            // Does the new prefix has a correct length?
+            if (strlen($new)>14)
+            {
+                // User and group names are capped at 32 chars.
+                // AlternC currently limit logins to 14 chars.
+                // Prefix is limited to 14 to leave some margin.
+                $msg->raise("ERROR", "admin", "The prefix is too long (14 chars max)");
+
+                // Rollback the change, this will recall the hook
+                variable_set($name, $old);
+                return;
+            }
+
+            if (!preg_match("#^[a-z0-9_]+$#", $new))
+            {
+                $msg->raise("ERROR", "admin", "Prefix can only contains characters a-z, 0-9 and underscore");
+
+                // Rollback the change, this will recall the hook
+                variable_set($name, $old);
+                return;
+            }
+
+            // We cannot call $this->update_files() because
+            // the hook user doesn't have the rights to
+            // modify files. The files will be modified 5
+            // minutes later when everything updates.
+	}
     }
 
     protected function local_user_exists($login)
@@ -42,7 +93,7 @@ class m_nss
 
     public function define_files()
     {
-        $this->prefix = variable_get('user_prefix');
+        $this->prefix = variable_get($this->field_name);
         $this->define_group_file();
         $this->define_passwd_file();
         $this->define_shadow_file();
@@ -111,7 +162,6 @@ class m_nss
         $this->update_passwd_file();
         $this->update_shadow_file();
     }
-
 
     protected function update_group_file()
     {
