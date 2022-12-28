@@ -50,16 +50,16 @@ class m_nss
                 // User and group names are capped at 32 chars.
                 // AlternC currently limit logins to 14 chars.
                 // Prefix is limited to 14 to leave some margin.
-                $msg->raise("ERROR", "admin", "The prefix is too long (14 chars max)");
+                $msg->raise("ERROR", "nss", "The prefix is too long (14 chars max)");
 
                 // Rollback the change, this will recall the hook
                 variable_set($name, $old);
                 return;
             }
 
-            if (!preg_match("#^[a-z0-9_]+$#", $new))
+            if (!preg_match("#^[a-z0-9_]*$#", $new))
             {
-                $msg->raise("ERROR", "admin", "Prefix can only contains characters a-z, 0-9 and underscore");
+                $msg->raise("ERROR", "nss", "Prefix can only contains characters a-z, 0-9 and underscore");
 
                 // Rollback the change, this will recall the hook
                 variable_set($name, $old);
