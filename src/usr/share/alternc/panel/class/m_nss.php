@@ -76,18 +76,20 @@ class m_nss
     protected function local_user_exists($login)
     {
         global $msg;
-        // Check username in /etc/passwd
-        if($sys_passwd_file = file_get_contents("/etc/passwd")) {
-            preg_match_all("/^$login:/m", $sys_passwd_file, $out);
-            $res_array = $out[0];
-            if(!empty($res_array)) {
-                $msg->raise("ERROR", "nss", "A user $login exists on the system");
+
+        $prefixed_login = variable_get($this->field_name) . $login;
+
+        $user_exists = exec("getent passwd $prefixed_login 2>&1");
+        $group_exists = exec("getent group $prefixed_login 2>&1");
+
+        $msg->log("nss", "user_exists contains $user_exists", "group_exists contains $group_exists");
+
+        if(!empty($user_exists) || !empty($group_exists))
+        {
+                $msg->raise("ERROR", "nss", "A user $prefixed_login exists on the system");
                 return true;
-            }
-        } else {
-            $msg->log("nss", "hook_admin_add_member - ERROR: couldn't open /etc/passwd");
-            return true;
         }
+
         return false;
     }
 
