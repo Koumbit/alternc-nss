@@ -13,6 +13,11 @@ class m_nss
     protected $field_name = "user_prefix";
     protected $prefix;
 
+    function __construct()
+    {
+        $this->prefix = variable_get($this->field_name);
+    }
+
     /** Hook function called when a user is created
      * This function add acccount to nss file
      * globals $cuid is the appropriate user
@@ -95,7 +100,6 @@ class m_nss
 
     public function define_files()
     {
-        $this->prefix = variable_get($this->field_name);
         $this->define_group_file();
         $this->define_passwd_file();
         $this->define_shadow_file();
