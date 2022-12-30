@@ -1,14 +1,11 @@
 #!/usr/bin/env -S bash -c 'type php-alternc-wrapper 1>/dev/null 2>&1 && exec php-alternc-wrapper $0 || exec php $0'
 <?php
 
-if (isset($argv[1]) && $argv[1] == "end") {
+if (isset($argv[1]) && $argv[1] == "before-reload") {
     chdir("/usr/share/alternc/panel/");
     require("/usr/share/alternc/panel/class/config_nochk.php");
 
-    // Super admin enabled
-    $admin->enabled=1;
-
-    // Add a variable to prefix alternc usernames
+    // Add a variable used to prefix alternc usernames
     $var_name = 'user_prefix';
     $var_value = 'altc_';
     $var_comment =  'Prefix added to alternC usernames for the filesystem, preventing UID collisions with existing users. ';
@@ -19,6 +16,14 @@ if (isset($argv[1]) && $argv[1] == "end") {
     } else {
         echo "Alternc-nss: required variable 'user_prefix' added with default value 'altc_'. You can edit it from the admin control panel\n";
     }
+}	
+
+if (isset($argv[1]) && $argv[1] == "end") {
+    chdir("/usr/share/alternc/panel/");
+    require("/usr/share/alternc/panel/class/config_nochk.php");
+
+    // Super admin enabled
+    $admin->enabled=1;
 
     // Update files in /var/lib/extrausers/
     echo "Alternc-nss: updating files in /var/lib/extrausers/\n";
