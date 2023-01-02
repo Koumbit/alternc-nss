@@ -42,13 +42,12 @@ class m_nss
      */
     public function hook_variable_set($name, $old, $new)
     {
-        global $msg;
+       global $msg;
         $msg->log("nss", "hook_variable_set($name,$old,$new)");
 
         if ($name === $this->field_name)
         {
             // The prefix was changed
-            // Does the new prefix uses correct characters?
             // Does the new prefix has a correct length?
             if (strlen($new)>14)
             {
@@ -62,6 +61,7 @@ class m_nss
                 return;
             }
 
+            // Does the new prefix uses correct characters?
             if (!preg_match("#^[a-z0-9_]*$#", $new))
             {
                 $msg->raise("ERROR", "nss", "Prefix can only contains characters a-z, 0-9 and underscore");
@@ -73,9 +73,9 @@ class m_nss
 
             // We cannot call $this->update_files() because
             // the hook user doesn't have the rights to
-            // modify files. The files will be modified 5
-            // minutes later when everything updates.
-	}
+            // modify files. The new prefix will be applied
+            // during the next update five minutes later.
+            $msg->raise("INFO", "nss", _("The modifications will take effect at %s.  Server time is %s."), array(date('H:i:s', ($t-($t%300)+300)), date('H:i:s', $t)));
     }
 
     protected function local_user_exists($login)
