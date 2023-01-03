@@ -2,6 +2,13 @@
 
 /**
  * Manage alternc account with nss service
+ *
+ * The function update_files() is never called by the
+ * hooks because they don't have the proper rights to
+ * modify the files. The files are written every 5 mins
+ * by the PHP-FPM cron job, which execute the install.d
+ * alternc-nss script, which call update_files() with
+ * the proper rights.
  */
 class m_nss
 {
@@ -16,19 +23,6 @@ class m_nss
     function __construct()
     {
         $this->prefix = variable_get($this->field_name);
-    }
-
-    /** Hook function called when a user is created
-     * This function add acccount to nss file
-     * globals $cuid is the appropriate user
-     *
-     * @return void
-     */
-    public function hook_admin_add_member()
-    {
-        global $msg;
-        $msg->log("nss", "hook_admin_add_member");
-        $this->update_files();
     }
 
     /** Hook function called after a value in the variable
@@ -71,10 +65,6 @@ class m_nss
                 return;
             }
 
-            // We cannot call $this->update_files() because
-            // the hook user doesn't have the rights to
-            // modify files. The new prefix will be applied
-            // during the next update five minutes later.
             $msg->raise("INFO", "nss", _("The modifications will take effect at %s.  Server time is %s."), array(date('H:i:s', ($t-($t%300)+300)), date('H:i:s', $t)));
         }
     }
@@ -83,7 +73,7 @@ class m_nss
     {
         global $msg;
 
-        $prefixed_login = variable_get($this->field_name) . $login;
+        $prefixed_login = $this->prefix . $login;
 
         $user_exists = exec("getent passwd $prefixed_login 2>&1");
         $group_exists = exec("getent group $prefixed_login 2>&1");
@@ -212,9 +202,8 @@ class m_nss
             $msg->log("nss", "hook_alternc_add_nember - ERROR: Aborting user creation");
             return false;
         }
-        $this->update_files();
+
         return true;
     }
 
 }
-
