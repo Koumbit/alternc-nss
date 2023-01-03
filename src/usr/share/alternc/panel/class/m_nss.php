@@ -76,6 +76,7 @@ class m_nss
             // modify files. The new prefix will be applied
             // during the next update five minutes later.
             $msg->raise("INFO", "nss", _("The modifications will take effect at %s.  Server time is %s."), array(date('H:i:s', ($t-($t%300)+300)), date('H:i:s', $t)));
+        }
     }
 
     protected function local_user_exists($login)
