@@ -36,31 +36,33 @@ class m_nss
      */
     public function hook_variable_set($name, $old, $new)
     {
-       global $msg;
+        global $msg;
         $msg->log("nss", "hook_variable_set($name,$old,$new)");
+
+        // Persistent variable created and initialized with
+        // object creation.
+        static $is_this_a_rollback = false;
 
         if ($name === $this->field_name)
         {
             // The prefix was changed
-            // Does the new prefix has a correct length?
-            if (strlen($new)>14)
-            {
-                // User and group names are capped at 32 chars.
-                // AlternC currently limit logins to 14 chars.
-                // Prefix is limited to 14 to leave some margin.
-                $msg->raise("ERROR", "nss", "The prefix is too long (14 chars max)");
 
-                // Rollback the change, this will recall the hook
-                variable_set($name, $old);
+            // Was the prefix changed during a rollback?
+            if ($is_this_a_rollback)
+            {
+                // Yes, so we don't need to change it again.
+                $is_this_a_rollback = false;
                 return;
             }
 
+            // Does the new prefix has a correct length?
             // Does the new prefix uses correct characters?
-            if (!preg_match("#^[a-z0-9_]*$#", $new))
+            if (!preg_match("#^[a-z0-9_]*$#", $new) || strlen($new)>14)
             {
-                $msg->raise("ERROR", "nss", "Prefix can only contains characters a-z, 0-9 and underscore");
+                $msg->raise("ERROR", "nss", "Prefix can only contains characters a-z, 0-9 and underscore and use at most 14 chars");
 
                 // Rollback the change, this will recall the hook
+                $is_this_a_rollback = true;
                 variable_set($name, $old);
                 return;
             }
