@@ -59,7 +59,7 @@ class m_nss
             // Does the new prefix uses correct characters?
             if (!preg_match("#^[a-z0-9_]*$#", $new) || strlen($new)>14)
             {
-                $msg->raise("ERROR", "nss", "Prefix can only contains characters a-z, 0-9 and underscore and use at most 14 chars");
+                $msg->raise("ERROR", "nss", _("Prefix can only contains characters a-z, 0-9 and underscore and use at most 14 chars"));
 
                 // Rollback the change, this will recall the hook
                 $is_this_a_rollback = true;
@@ -84,7 +84,7 @@ class m_nss
 
         if(!empty($user_exists) || !empty($group_exists))
         {
-                $msg->raise("ERROR", "nss", "A user $prefixed_login exists on the system");
+                $msg->raise("ERROR", "nss", _("A user with the same name already exists in the system"));
                 return true;
         }
 
