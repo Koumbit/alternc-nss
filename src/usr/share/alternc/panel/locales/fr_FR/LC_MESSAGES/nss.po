@@ -1,0 +1,33 @@
+# French AlternC Translation
+# Copyright (c) 2002 the AlternC Development Team
+# <tech@alternc.org>
+# $Id: admin.po,v 1.10 2004/11/01 15:55:44 anonymous Exp $
+# Benjamin Sonntag <benjamin@sonntag.fr>, 2012.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: $Id: admin.po,v 1.10 2004/11/01 15:55:44 anonymous Exp "
+"$\n"
+"Report-Msgid-Bugs-To: i18n@alternc.org\n"
+"POT-Creation-Date: 2015-02-13 18:04+0100\n"
+"PO-Revision-Date: 2012-10-17 09:52+0200\n"
+"Last-Translator: m-at-koumbit <mathieul@koumbit.org>\n"
+"Language-Team: français <team@alternc.org>\n"
+"Language: fr\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bits\n"
+"X-Generator: Emacs 21\n"
+"Plural-Forms: nplurals=2; plural=(n!=1);\n"
+
+#: ../class/m_nss.php:62
+msgid ""
+"Prefix can only contains characters a-z, 0-9 and underscore and use at most "
+"14 chars"
+msgstr "Le préfixe ne peut contenir que les caractères a-z, 0-9 et souligné, "
+"et doit utiliser au plus 14 caractères"
+
+#: ../class/m_nss.php:87
+msgid "A user with the same name already exists in the system"
+msgstr "Un nom d'utilisateur identique existe déjà dans le système"
+
