@@ -1,0 +1,16 @@
+# Template for alternc-nss translation
+# Copyright (c) 2023 Koumbit
+# <info@koumbit.org>
+# $Id: admin.po,v 1.10 2004/11/01 15:55:44 anonymous Exp $
+msgid ""
+msgstr ""
+
+#: ../class/m_nss.php:62
+msgid ""
+"Prefix can only contains characters a-z, 0-9 and underscore and use at most "
+"14 chars"
+msgstr ""
+
+#: ../class/m_nss.php:87
+msgid "A user with the same name already exists in the system"
+msgstr ""
