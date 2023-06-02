@@ -66,8 +66,8 @@ class m_nss
                 variable_set($name, $old);
                 return;
             }
-	    
-	    $t = time();
+
+            $t = time();
             $msg->raise("INFO", "nss", _("The modifications will take effect at %s.  Server time is %s."), array(date('H:i:s', ($t-($t%300)+300)), date('H:i:s', $t)));
         }
     }
