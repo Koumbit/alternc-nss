@@ -1,0 +1,28 @@
+alternc-nss (0.0.4) stable; urgency=low
+
+  * Use standard debuild packaging system
+  * Use travis service to package all tagged version
+
+ -- Camille Lafitte <alternc@webelys.com>  Mon, 13 Dec 2021 18:41:00 +0200
+
+alternc-nss (0.0.3) stable; urgency=low
+
+  * Home directory in passwd file
+
+ -- Camille Lafitte <alternc@webelys.com>  Mon, 24 Dec 2018 17:26:00 +0200
+
+alternc-nss (0.0.3) stable; urgency=low
+
+  * Support shadow file
+
+ -- Camille Lafitte <alternc@webelys.com>  Mon, 30 Apr 2018 17:26:00 +0200
+
+
+alternc-nss (0.0.1) stable; urgency=low
+
+  * Provide a stable package
+  * Enable extrausers from AltenC database
+  * Should be auto update, when new account is created
+
+ -- Camille Lafitte <alternc@webelys.com>  Mon, 22 Jan 2018 17:26:00 +0200
+

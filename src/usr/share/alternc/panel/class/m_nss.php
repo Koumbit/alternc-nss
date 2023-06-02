@@ -2,38 +2,89 @@
 
 /**
  * Manage alternc account with nss service
+ *
+ * The function update_files() is never called by the
+ * hooks because they don't have the proper rights to
+ * modify the files. The files are written every 5 mins
+ * by the PHP-FPM cron job, which execute the install.d
+ * alternc-nss script, which call update_files() with
+ * the proper rights.
  */
 class m_nss
 {
     protected $group_file;
     protected $passwd_file;
     protected $shadow_file;
-    /** Hook function called when a user is created
-     * This function add acccount to nss file
-     * globals $cuid is the appropriate user
+
+    /** The name of the field in the table "variable"  */
+    protected $field_name = "user_prefix";
+    protected $prefix;
+
+    function __construct()
+    {
+        $this->prefix = variable_get($this->field_name);
+    }
+
+    /** Hook function called after a value in the variable
+     * table is modified through the admin control panel.
+     *
+     * @param $name the field changed in the variable table
+     * @param $old the previous value overwritten in the table
+     * @param $new the new value now in the table
      *
      * @return void
      */
-    public function hook_admin_add_member()
+    public function hook_variable_set($name, $old, $new)
     {
         global $msg;
-        $msg->log("nss", "hook_admin_add_member");
-        $this->update_files();
+        $msg->log("nss", "hook_variable_set($name,$old,$new)");
+
+        // Persistent variable created and initialized with
+        // object creation.
+        static $is_this_a_rollback = false;
+
+        if ($name === $this->field_name)
+        {
+            // The prefix was changed
+
+            // Was the prefix changed during a rollback?
+            if ($is_this_a_rollback)
+            {
+                // Yes, so we don't need to change it again.
+                $is_this_a_rollback = false;
+                return;
+            }
+
+            // Does the new prefix has a correct length?
+            // Does the new prefix uses correct characters?
+            if (!preg_match("#^[a-z0-9_]*$#", $new) || strlen($new)>14)
+            {
+                $msg->raise("ERROR", "nss", _("Prefix can only contains characters a-z, 0-9 and underscore and use at most 14 chars"));
+
+                // Rollback the change, this will recall the hook
+                $is_this_a_rollback = true;
+                variable_set($name, $old);
+                return;
+            }
+
+            $t = time();
+            $msg->raise("INFO", "nss", _("The modifications will take effect at %s.  Server time is %s."), array(date('H:i:s', ($t-($t%300)+300)), date('H:i:s', $t)));
+        }
     }
 
     protected function local_user_exists($login)
     {
         global $msg;
-        // Check username in /etc/passwd
-        if($sys_passwd_file = file_get_contents("/etc/passwd")) {
-            preg_match_all("/^$login:/m", $sys_passwd_file, $out);
-            $res_array = $out[0];
-            if(!empty($res_array)) {
-                $msg->raise("ERROR", "nss", "A user $login exists on the system");
-                return true;
-            }
-        } else {
-            $msg->log("nss", "hook_admin_add_member - ERROR: couldn't open /etc/passwd");
+
+        $prefixed_login = $this->prefix . $login;
+
+        $user_exists = exec("getent passwd $prefixed_login 2>&1");
+        $group_exists = exec("getent group $prefixed_login 2>&1");
+
+        $msg->log("nss", "user_exists contains $user_exists", "group_exists contains $group_exists");
+
+        if(!empty($user_exists) || !empty($group_exists))
+        {
             return true;
         }
         return false;
@@ -53,7 +104,8 @@ class m_nss
         $lines=array();
         $lines[]='##ALTERNC ACCOUNTS START##';
         while ($db->next_record()) {
-            $lines[] = $db->f('login').":x:".$db->f('uid').":";
+            $prefixed_login = $this->prefix . $db->f('login');
+            $lines[] = $prefixed_login.":x:".$db->f('uid').":";
         }
         $lines[]='##ALTERNC ACCOUNTS END##';
 
@@ -67,7 +119,8 @@ class m_nss
         $lines=array();
         $lines[]='##ALTERNC ACCOUNTS START##';
         while ($db->next_record()) {
-            $lines[] = $db->f('login').":x:".$db->f('uid').":".$db->f('uid')."::".getuserpath($db->f('login')).":/bin/false";
+            $prefixed_login = $this->prefix . $db->f('login');
+            $lines[] = $prefixed_login.":x:".$db->f('uid').":".$db->f('uid')."::".getuserpath($db->f('login')).":/bin/false";
         }
         $lines[]='##ALTERNC ACCOUNTS END##';
 
@@ -81,17 +134,18 @@ class m_nss
         $lines=array();
         $lines[]='##ALTERNC ACCOUNTS START##';
         while ($db->next_record()) {
-	    // shadow fields (9) :
-	    // 1. login
-	    // 2. encrypted password or * to prevent login
-	    // 3. date of last password change or '' meaning that password aging features are disabled
-	    // 4. minimum password age or '' or 0 meaning no minimum age
-	    // 5. maximum password age or '' meaning no maximum password age, no password warning period, and no password inactivity period
-	    // 6. password warning period or '' or 0 meaning there are no password warning period
-	    // 7. password inactivity period or '' for no enforcement
-	    // 8. account expiration date or '' for no expiration
-	    // 9. reserved
-	    $fields = array($db->f('login'), '*', '', '', '', '', '', '', '');
+            // shadow fields (9) :
+            // 1. login
+            // 2. encrypted password or * to prevent login
+            // 3. date of last password change or '' meaning that password aging features are disabled
+            // 4. minimum password age or '' or 0 meaning no minimum age
+            // 5. maximum password age or '' meaning no maximum password age, no password warning period, and no password inactivity period
+            // 6. password warning period or '' or 0 meaning there are no password warning period
+            // 7. password inactivity period or '' for no enforcement
+            // 8. account expiration date or '' for no expiration
+            // 9. reserved
+            $prefixed_login = $this->prefix . $db->f('login');
+            $fields = array($prefixed_login, '*', '', '', '', '', '', '', '');
             $lines[] = implode(':', $fields);
         }
         $lines[]='##ALTERNC ACCOUNTS END##';
@@ -106,7 +160,6 @@ class m_nss
         $this->update_passwd_file();
         $this->update_shadow_file();
     }
-
 
     protected function update_group_file()
     {
@@ -148,11 +201,8 @@ class m_nss
         global $msg;
         if($this->local_user_exists($login)) {
             $msg->log("nss", "hook_alternc_add_nember - ERROR: Aborting user creation");
-            return false;
+            return _("A user with the same name already exists in the system");
         }
-        $this->update_files();
-        return true;
     }
 
 }
-
