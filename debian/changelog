@@ -1,6 +1,0 @@
-alternc-nss (0.0.3) stable; urgency=low
-
-  * initial AlternC NSS support provider for AlternC >=3.2 from wheezy to Stretch
-
- -- cam.lafit <cam.lafit@azerttyu.net>  Sun, 24 Dec 2018 17:58:00 +0200
-
