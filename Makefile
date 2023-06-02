@@ -36,4 +36,3 @@ package:
 		.
 
 install:
-	cp -r src/* $(DESTDIR)/
