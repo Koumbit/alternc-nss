@@ -85,8 +85,7 @@ class m_nss
 
         if(!empty($user_exists) || !empty($group_exists))
         {
-                $msg->raise("ERROR", "nss", _("A user with the same name already exists in the system"));
-                return true;
+            return true;
         }
 
         return false;
@@ -203,10 +202,8 @@ class m_nss
         global $msg;
         if($this->local_user_exists($login)) {
             $msg->log("nss", "hook_alternc_add_nember - ERROR: Aborting user creation");
-            return false;
+            return _("A user with the same name already exists in the system");
         }
-
-        return true;
     }
 
 }
