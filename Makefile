@@ -34,5 +34,3 @@ package:
 		--after-remove  "debian/postrm" \
 		--chdir src \
 		.
-
-install:
