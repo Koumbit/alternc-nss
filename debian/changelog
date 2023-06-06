@@ -1,3 +1,9 @@
+alternc-nss (0.0.4~1) stable; urgency=low
+
+  * Add user prefix support
+
+ -- Nina R. <nina@koumbit.org>  Mon,  5 Jun 2023 23:59:00 +0200
+
 alternc-nss (0.0.4) stable; urgency=low
 
   * Use standard debuild packaging system
