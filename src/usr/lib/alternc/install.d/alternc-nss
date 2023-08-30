@@ -26,6 +26,5 @@ if (isset($argv[1]) && $argv[1] == "end") {
     $admin->enabled=1;
 
     // Update files in /var/lib/extrausers/
-    echo "Alternc-nss: updating files in /var/lib/extrausers/\n";
     $nss->update_files();
 }
