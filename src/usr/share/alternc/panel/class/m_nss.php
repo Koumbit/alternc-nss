@@ -12,9 +12,12 @@
  */
 class m_nss
 {
-    protected $group_file;
-    protected $passwd_file;
-    protected $shadow_file;
+    protected $group = array();
+    protected $passwd = array();
+    protected $shadow = array();
+
+    protected $dir_backup = "/var/lib/alternc/backups/";
+    protected $dir_extrausers = "/var/lib/extrausers/";
 
     /** The name of the field in the table "variable"  */
     protected $field_name = "user_prefix";
@@ -102,14 +105,12 @@ class m_nss
         global $db;
         $db->query("SELECT login,uid FROM `membres`");
         $lines=array();
-        $lines[]='##ALTERNC ACCOUNTS START##';
         while ($db->next_record()) {
             $prefixed_login = $this->prefix . $db->f('login');
             $lines[] = $prefixed_login.":x:".$db->f('uid').":";
         }
-        $lines[]='##ALTERNC ACCOUNTS END##';
 
-        $this->group_file = implode("\n", $lines);
+        $this->group = $lines;
     }
 
     protected function define_passwd_file()
@@ -117,14 +118,12 @@ class m_nss
         global $db;
         $db->query("SELECT login,uid FROM `membres`");
         $lines=array();
-        $lines[]='##ALTERNC ACCOUNTS START##';
         while ($db->next_record()) {
             $prefixed_login = $this->prefix . $db->f('login');
             $lines[] = $prefixed_login.":x:".$db->f('uid').":".$db->f('uid')."::".getuserpath($db->f('login')).":/bin/false";
         }
-        $lines[]='##ALTERNC ACCOUNTS END##';
 
-        $this->passwd_file = implode("\n", $lines);
+        $this->passwd = $lines;
     }
 
     protected function define_shadow_file()
@@ -132,7 +131,6 @@ class m_nss
         global $db;
         $db->query("SELECT login FROM `membres`");
         $lines=array();
-        $lines[]='##ALTERNC ACCOUNTS START##';
         while ($db->next_record()) {
             // shadow fields (9) :
             // 1. login
@@ -148,10 +146,33 @@ class m_nss
             $fields = array($prefixed_login, '*', '', '', '', '', '', '', '');
             $lines[] = implode(':', $fields);
         }
-        $lines[]='##ALTERNC ACCOUNTS END##';
 
-        $this->shadow_file = implode("\n", $lines);
+        $this->shadow = $lines;
     }
+
+    protected function write_content($file, $file_bck, $content_new)
+    {
+        $content_lines = false;
+        if (file_exists($file)) {
+            $content_lines = file($file, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+        }
+
+        if (!$content_lines) {
+            $content_lines = [];
+        }
+        if (file_exists($file_bck)) {
+            $content_lines_bck = file($file_bck, FILE_IGNORE_NEW_LINES | FILE_SKIP_EMPTY_LINES);
+            $content_lines = array_diff($content_lines, $content_lines_bck);
+        }
+        $content_lines = array_merge($content_lines, $content_new);
+        $content = implode("\n", $content_lines);
+        $content_bck = implode("\n", $content_new);
+
+        //Provide a final return carrier
+        $content .= "\n";
+
+        return $this->write_file($file_bck, $content_bck) && $this->write_file($file, $content);
+     }
 
     public function update_files()
     {
@@ -163,36 +184,34 @@ class m_nss
 
     protected function update_group_file()
     {
-        $file = "/var/lib/extrausers/group";
-        $content = file_get_contents($file);
-        $content = preg_replace('/##ALTERNC ACCOUNTS START##.*##ALTERNC ACCOUNTS END##/ms', $this->group_file, $content, -1, $count);
-        if ($count == 0) {
-            $content .= $this->group_file;
-        }
-        return file_put_contents($file, $content, LOCK_EX);
+        $file = $this->dir_extrausers . "group";
+        $file_bck = $this->dir_backup . "group";
+
+        return $this->write_content($file, $file_bck, $this->group);
     }
 
     protected function update_passwd_file()
     {
-        $file = "/var/lib/extrausers/passwd";
-        $content = file_get_contents($file);
-        $content = preg_replace('/##ALTERNC ACCOUNTS START##.*##ALTERNC ACCOUNTS END##/ms', $this->passwd_file, $content, -1, $count);
-        if ($count == 0) {
-            $content .= $this->passwd_file;
-        }
+        $file = $this->dir_extrausers . "passwd";
+        $file_bck = $this->dir_backup . "passwd";
 
-        return file_put_contents($file, $content, LOCK_EX);
+        return $this->write_content($file, $file_bck, $this->passwd);
+
     }
 
     protected function update_shadow_file()
     {
-        $file = "/var/lib/extrausers/shadow";
-        $content = file_get_contents($file);
-        $content = preg_replace('/##ALTERNC ACCOUNTS START##.*##ALTERNC ACCOUNTS END##/ms', $this->shadow_file, $content, -1, $count);
-        if ($count == 0) {
-            $content .= $this->shadow_file;
-        }
+        $file = $this->dir_extrausers . "shadow";
+        $file_bck = $this->dir_backup . "shadow";
+ 
+        return $this->write_content($file, $file_bck, $this->shadow);
+    }
 
+    protected function write_file($file, $content, $separator = "\n")
+    {
+        if (is_array($content)) {
+            $content = implode($separator, $content);
+        }
         return file_put_contents($file, $content, LOCK_EX);
     }
 
